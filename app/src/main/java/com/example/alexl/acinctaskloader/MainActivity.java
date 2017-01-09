@@ -1,6 +1,5 @@
 package com.example.alexl.acinctaskloader;
 
-import android.app.Application;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -21,7 +20,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button loadFresco, loadClassic, loadFile;
     private Uri uri;
     private SimpleDraweeView image;
-    private static final String URL_IMAGE = "https://66.media.tumblr.com/aa40c3b1d82d63c4acb7f3f27dcfd6e7/tumblr_o79a2wEMlL1sdx0rco1_1280.jpg";
+    private BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,19 +38,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         loadFresco = (Button) findViewById(R.id.btn_load_with_fresco);
         loadClassic = (Button) findViewById(R.id.btn_load);
         loadFile = (Button) findViewById(R.id.download_file);
-        uri = Uri.parse(URL_IMAGE);
+        uri = Uri.parse(Constants.URL_IMAGE);
         image = (SimpleDraweeView) findViewById(R.id.sdvImage);
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int downloadedSize = intent.getIntExtra("downloadedSize", 0);
+                int totalSize = intent.getIntExtra("totalSize", 0);
+                publishProgress(downloadedSize, totalSize);
+            }
+        };
     }
 
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            publishProgress();
+    private void publishProgress(int downloadedSize, int totalSize) {
+        Toast.makeText(this, (downloadedSize * 100) / totalSize + " %", Toast.LENGTH_SHORT).show();
+        if (downloadedSize == totalSize) {
+            Toast.makeText(this, R.string.download_complite, Toast.LENGTH_LONG).show();
         }
-    };
+    }
 
-    private void publishProgress() {
-        Toast.makeText(this, "Файл загружен", Toast.LENGTH_SHORT).show();
+    @Override
+    protected void onStop() {
+        unregisterReceiver(receiver);
+        super.onStop();
     }
 
     @Override
@@ -61,11 +70,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 image.setImageURI(uri);
                 break;
             case R.id.btn_load:
-                new DownloadImageTask((ImageView) findViewById(R.id.classicImage)).execute(URL_IMAGE);
+                new DownloadImageTask((ImageView) findViewById(R.id.classicImage)).execute(Constants.URL_IMAGE);
                 break;
             case R.id.download_file:
                 Intent intent = new Intent(this, DownloadService.class);
-                startService(intent.putExtra("url", "http://cdimage.debian.org/debian-cd/8.6.0/i386/iso-cd/debian-8.6.0-i386-netinst.iso"));
+                startService(intent.putExtra("url", Constants.URL_ISOFILE));
                 break;
         }
     }

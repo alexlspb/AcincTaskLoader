@@ -3,21 +3,20 @@ package com.example.alexl.acinctaskloader;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.ImageView;
 
 import java.io.InputStream;
 import java.net.URL;
 
 /**
- * Created by alexl on 06.01.17.
+ * AsyncTask for downloaded images
  */
 
-public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
+class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
-    ImageView bmImage;
+    private ImageView bmImage;
 
-    public DownloadImageTask(ImageView bmImage) {
+    DownloadImageTask(ImageView bmImage) {
         this.bmImage = bmImage;
     }
 
@@ -29,7 +28,6 @@ public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
             InputStream in = new URL(url).openStream();
             bitImage = BitmapFactory.decodeStream(in);
         }catch (Exception e) {
-            Log.e("Ошибка передачи изображения", e.getMessage());
             e.printStackTrace();
         }
         return bitImage;

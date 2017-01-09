@@ -2,26 +2,25 @@ package com.example.alexl.acinctaskloader;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.widget.Toast;
+import android.os.Environment;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
- * Created by alexl on 07.01.17.
+ * Service for download iso image debian netinst
  */
 
 public class DownloadService extends IntentService {
 
-    public static final String CHANNEL = DownloadService.class.getSimpleName()+".broadcast";
+    public static final String CHANNEL = DownloadService.class.getSimpleName() + ".broadcast";
 
     public DownloadService() {
-        super("test");
+        super("thread");
     }
 
     @Override
@@ -34,10 +33,9 @@ public class DownloadService extends IntentService {
         byte[] buffer;
         int bufferLength;
 
-        File file = null;
-        FileOutputStream fos = null;
+        FileOutputStream fos;
 
-        try{
+        try {
             url = new URL(intent.getStringExtra("url"));
             urlConnection = (HttpURLConnection) url.openConnection();
 
@@ -45,37 +43,39 @@ public class DownloadService extends IntentService {
             urlConnection.setDoOutput(true);
             urlConnection.connect();
 
-            file = File.createTempFile("image", "download");
-            fos = new FileOutputStream(file);
+            String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            File sdFile = new File(sdPath, "debian_netinst.iso");
+            fos = new FileOutputStream(sdFile);
             inputStream = urlConnection.getInputStream();
 
             totalSize = urlConnection.getContentLength();
             downloadedSize = 0;
 
             buffer = new byte[1024];
-            bufferLength = 0;
+            int i = 0;
 
             while ((bufferLength = inputStream.read(buffer)) > 0) {
+                if (i == 1000) {
+                    sendResult(downloadedSize/1024000, totalSize/1024000);
+                    i = 0;
+                }
                 fos.write(buffer, 0, bufferLength);
                 downloadedSize += bufferLength;
-                if (downloadedSize == totalSize) {
-                    sendResult();
-                }
+                i++;
             }
 
             fos.close();
             inputStream.close();
 
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void sendResult() {
+    private void sendResult(int downloadedSize, int totalSize) {
         Intent intent = new Intent(CHANNEL);
+        intent.putExtra("downloadedSize", downloadedSize);
+        intent.putExtra("totalSize", totalSize);
         sendBroadcast(intent);
     }
-
 }

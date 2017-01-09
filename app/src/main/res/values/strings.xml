@@ -3,4 +3,5 @@
     <string name="btn_get_with_fresco">получить через fresco</string>
     <string name="btn_classic_get">получить</string>
     <string name="download_file">загрузить файл</string>
+    <string name="download_complite">Загрузка завершена</string>
 </resources>
